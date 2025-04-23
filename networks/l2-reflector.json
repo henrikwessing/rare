@@ -1,6 +1,6 @@
 {"nodes" : [
-    {"name" : "BMv2", "image" : "34334:bmv2"},
-    {"name" : "host1", "image" : "34334:base"}
+    {"name" : "BMv2", "image" : "rare:bmv2"},
+    {"name" : "host1", "image" : "rare:base"}
      ],
  "bridges" : [
     {"name" : "h1", "adjacencies" : ["host1;1", "BMv2"], "network" : "10.0.1.0"}

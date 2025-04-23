@@ -89,11 +89,11 @@ def docker_build(image_path):
 	curdir = os.getcwd()
 	# first we need to build the base image so we can build the rest
 	sys('systemctl restart docker')
-	sys('docker build -t 34334:base base')
-	# snort image is assumed build with tag 34334:ids
-	for image in ('inet','router','victims','switch','bmv2'):
-		image_name = '34334:' + image
-		r('docker build -t $image_name $image')
+	r('docker build -t rare:base base --progress=plain')
+	#for image in ('bmv2'):
+	image = 'bmv2'
+	image_name = 'rare:' + image
+	r('docker build -t $image_name $image --progress=plain')
 	#go back to the working dir
 	os.chdir(orig_dir)
 
