@@ -18,7 +18,7 @@ import subprocess
 
 from multiprocessing import Process
 
-parser = argparse.ArgumentParser(description='Course 34334 Lab')
+parser = argparse.ArgumentParser(description='RARE P4 Lab')
 parser.add_argument('--debug', action='store_true', default=False)
 args = parser.parse_args()
 
@@ -36,20 +36,14 @@ except:
         subprocess.check_call(['apt-get', 'install', 'python3-flask'])
         from flask import Flask, render_template, request, jsonify
 
-
-
 # create the application object
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-
-
 def get_connections():
     """this should return all of the machines that are connected"""
-
     done = []
-    
     for ns in lab.ns_root.ns:
   #      print(ns.name + "  " + ns.pid)
         for nic in ns.nics:    
@@ -64,12 +58,9 @@ def get_connections():
 
 def psef(grep):
     """this is python replacement for ps -ef"""
-
     pids = [pid for pid in os.listdir('/proc') if pid.isdigit()]
-
     for pid in pids:
         try:
-
             #read the command line from /proc/<pid>/cmdline
             with open(os.path.join('/proc', pid, 'cmdline'), 'rb') as cmd:
                 cmd = cmd.read()
@@ -132,7 +123,7 @@ def launcher():
 
 @app.route('/building')
 def waiting():
-	return("Vent et øjeblik mens lab images bygges")
+	return("Wait while lab is being built")
 
 @app.route('/getnet')
 def getnet():
@@ -215,46 +206,6 @@ def setup_p4_2():
     except:
         print(traceback.format_exc())
         return 'Error'
-
-
-
-
-
-@app.route('/setuprouting')
-def setuprouting():
-    print("Setting up routing environment")
-    """start the routing network"""
-
-    if len(NSROOT.ns) >= 1:
-        return 'Opdater Lab'
-
-    try:
-        lab.setup_routing('eth0')
-        #time.sleep(3)
-        return 'Opdater Lab'
-
-    except:
-        print(traceback.format_exc())
-        return 'Fejl'
-
-@app.route('/setupQoS')
-def setupQoS():
-    print("Setting up routing environment")
-    """start the routing network"""
-
-    if len(NSROOT.ns) >= 1:
-        return 'Opdater Lab'
-
-    try:
-        lab.setup_QoS('eth0')
-        #time.sleep(3)
-        return 'Opdater Lab'
-
-    except:
-        print(traceback.format_exc())
-        return 'Fejl'
-
-
 
 @app.route('/shutdown')
 def shutdownlab():

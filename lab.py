@@ -6,7 +6,6 @@ import os
 
 from random import randrange
 
-
 def read_setup(setup):
     f = open('networks/'+setup+'.json')
     print(f)
@@ -200,79 +199,4 @@ def setup_bmv2(setup):
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
         
   
-        # Connecting to internet via lab. Pretty much hardcoded          
-        #set_internet('internet',h_if,'internal','192.168.1.100/24','192.168.1.1')
-        #r('docker exec -ti server rc-service nginx start')
-
-def setup_routing(h_if):
-    try:
-        ns_root.shutdown()
-    except:
-        print('[*] Did not shutdown cleanly, trying again')
-        docker_clean()
-    finally:
-        docker_clean()
-        # Stop IP forwarding on Debian
-        r('sysctl -w net.ipv4.ip_forward=0')    
-        # Reading network setup
-        (nodes,bridges) = read_setup("routing")
-        # Create containers
-        create_nodes(nodes)
-        # Connecting all dockers in bridges
-        create_bridges(bridges)
-        set_addresses(bridges)  
-
-        # Enable IP forwarding in all routers - yes hardcoding :-(
-        for i in range(4):
-            k = str(i+1)
-            r('docker exec -ti router%s sysctl -w net.ipv4.ip_forward=1' % k)
-    
-           
-        # Select config file and start service in router 1 and 2
-        for i in range(2):
-            k=str(i+1)
-            r('docker exec -ti router%s mv /etc/frr/ripd%s.conf /etc/frr/ripd.conf' % (k,k))
-            r('docker exec -ti router%s mv /etc/frr/zebra%s.conf /etc/frr/zebra.conf' % (k,k))
-            #r('docker exec -ti router%s mv /etc/frr/daemons34334 /etc/frr/daemons' % k)
-            #r('docker exec -ti router%s supervisorctl start frr' % k)
-            r('docker exec -ti router%s service frr start' % k)
-            
-
-
-def setup_QoS(h_if):
-    try:
-        ns_root.shutdown()
-    except:
-        print('[*] Did not shutdown cleanly, trying again')
-        docker_clean()
-    #finally:
-    #    docker_clean()
-        # Stop IP forwarding on Debian
-    r('sysctl -w net.ipv4.ip_forward=0')    
-    # Reading network setup
-    (nodes,bridges) = read_setup("QoS")
-    # Create containers
-    create_nodes(nodes)
-    create_bridges(bridges)
-    #Manually connect switches to internal bridges
-    r("ip netns exec sw1 brctl addif sw1 sw3")
-    r("ip netns exec sw2 brctl addif sw2 sw3")
-    
-    try:
-        r('ip netns exec client1 ip link set sw1 address aa:14:c2:76:80:17')
-        r('ip netns exec client2 ip link set sw1 address aa:14:c2:76:80:19')
-        r('ip netns exec server ip link set sw2 address aa:14:c2:76:80:16')
-        r('ip netns exec internet ip link set sw2 address aa:14:c2:76:80:22')
-    except:
-        print("Hopefully not relevant")
-
-
-    
-    set_addresses(bridges)  
-    set_internet('internet',h_if,'sw1','192.168.1.100/24','192.168.1.1')
-    # Set default gateway manually to client1 and client1
-    # Very ugly and hardcoded
-    r('ip netns exec client1 ip route add default via 192.168.1.1')
-    r('ip netns exec client2 ip route add default via 192.168.1.1')
-    r('docker exec -ti server service nginx start')
 

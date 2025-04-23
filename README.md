@@ -1,4 +1,2 @@
-# 34334
-Laboratoriesetup til kursus 34334.
-
-Start med at køre filen setup.sh
+# RARE P4 Tutorial
+Lab setup as supplement to the RARE Learning Units

