@@ -1,0 +1,32 @@
+# General
+*.log
+*.tmp
+*.bak
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+
+# P4 / Network Sim Tools
+*.pcap
+*.json
+*.cfg
+*.txt
+*.dot
+*.out
+
+# VS Code
+.vscode/
+
+# Build artifacts
+build/
+bin/
+obj/
+*.o
+*.so
+*.a
+*.git-credentials

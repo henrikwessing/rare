@@ -1,0 +1,41 @@
+FROM ubuntu:latest
+
+MAINTAINER 34334
+
+#adding a label here so we can easily delete our containers
+LABEL 34334=true
+
+ENV DEBIAN_FRONTEND noninteractive
+
+#things that are nice to have on all images
+RUN sed -i -e 's/http:\/\/archive\.ubuntu\.com\/ubuntu\//http:\/\/mirrors\.dotsrc\.org\/ubuntu/' /etc/apt/sources.list
+RUN apt-get -y update && apt-get -y upgrade
+#RUN apt-get -y install wireshark tshark 
+RUN apt-get -y install bridge-utils ethtool
+RUN apt-get -y install python3
+RUN apt-get -y install nmap mtr traceroute wget curl supervisor 
+RUN apt-get -y install python3-pip smbclient
+RUN apt-get -y install iptables 
+
+#set root creds create cybertek user with same password
+RUN usermod -p '$y$j9T$U8Hk9xud8LdTgUX68Z7lx.$kW2qyUmQDuzM9tIBISwbaIVFC9wSdh05ZuzsnSOm9E0' root
+RUN useradd -d /home/cybertek -m -p "$(openssl passwd -1 34334)" -s /bin/bash cybertek -G sudo
+
+#fix unnecessary errors down the line
+#RUN update-locale
+
+#install python dependencies
+#RUN pip install netifaces
+
+#create directory for child images to store configuration in
+RUN  mkdir -p /var/log/supervisor && mkdir -p /etc/supervisor/conf.d
+
+#supervisor base configuration
+ADD supervisor.conf /etc/supervisor.conf
+#add conf for dhclient
+ADD supervisor_dhclient.conf /etc/supervisor/conf.d/supervisor_dhclient.conf
+
+# default command
+CMD ["supervisord", "-c", "/etc/supervisor.conf"]
+
+

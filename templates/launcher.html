@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+	<div class="row" style="text-white">
+		<p class="subtitle">{{text.text}}</p>
+	</div>
+</div>
+<div class="container-fluid">
+	<div class="row">
+		<div id="buttonsDiv" class="col-sm-2 col-md-2 col-lg-2"></div>
+		 <div id="mynetwork" class="col-sm-10 col-md-10 col-lg-10" style="background-color: #AAAAAA"></div>
+  </div>
+ </div>
+<script>
+$(function() {
+	$.ajaxSetup({timeout:0});
+  var network;
+  var nodes = new vis.DataSet();
+  var edges = new vis.DataSet();
+  $.getJSON('getnet', redrawAll);
+  // create a network
+  var container = document.getElementById('mynetwork');
+  var data = {
+    nodes: nodes,
+    edges: edges
+  };
+  var options = {
+    interaction: {hover:true},
+    nodes: {
+      shape: 'circle',
+      size: 30,
+      font: {
+        size: 17
+      },
+      borderWidth: 2,
+      shadow:true
+    },
+    edges: {
+      width: 2,
+      shadow:true
+    }
+  };
+  
+  var network = new vis.Network(container, data, options);
+ 
+  function redrawAll(data) {
+    console.log(data)
+    nodes.clear();
+    edges.clear();
+    nodes.add(data.nodes);
+    edges.add(data.edges);
+    var ids = nodes.getIds();
+    console.log(ids);
+    var items = nodes.get({
+      fields: ['label'],
+    });
+    network.fit();
+    $('#setupmodal').modal('hide');
+    $('#shutdownmodal').modal('hide');
+  };
+
+  const buttons = [
+    { id: 'p4_1', url: '/setup_p4_1', modal: 'setupmodal', text1: 'Ethernet Reflector Lab', text2: 'Restart lab' },
+    { id: 'p4_2', url: '/setup_p4_2', modal: 'setupmodal', text1: 'L2 forwarding Lab', text2: 'Restart lab' },
+    { id: 'p4_3', url: '/setup_p4_3', modal: 'setupmodal', text1: 'Statistics collection', text2: 'Restart lab' },
+    { id: 'p4_4', url: '/setup_p4_4', modal: 'setupmodal', text1: 'FreeRtr on RARE', text2: 'Restart lab' },
+    { id: 'shutdown', url: '/shutdown', modal: 'shutdownmodal', text1: 'Shutdown', text2: 'Shutdown' }
+  ];
+
+  function setupButtons(buttons) {
+    buttons.forEach(button => {
+      $('#buttonsDiv').append(`<button id="${button.id}" type="submit" class="btn btn-danger">${button.text1}</button><br><br>`);
+      $(`button#${button.id}`).click(function() {
+        $(`#${button.modal}`).modal('show');
+        $.get(button.url, function(data) {
+          $(`#${button.modal}`).modal('hide')
+        })
+        .done(function(data) {
+          $(`#${button.modal}`).modal('hide');
+          $(`button#${button.id}`).text(button.text2);
+          $.getJSON("getnet",redrawAll);
+        });
+      });
+    });
+  };
+  
+  setupButtons(buttons);
+});
+</script>
+{% endblock %}
+</body>
+</html>

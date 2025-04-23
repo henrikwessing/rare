@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>P4 showcasing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="static/js/jquery-1.11.3.min.js"></script>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="static/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="static/visjs/vis-network.min.js"></script>      
+    <link href="static/visjs/vis-network.min.css" rel="stylesheet" type="text/css"/>
+    <style type="text/css">
+        #mynetwork {
+            height: 500px;
+        }
+    </style>
+<style>
+  .jumbotron-custom {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 2rem; /* Adjust padding as needed */
+  }
+  .jumbotron-custom .row {
+    display: flex;
+    align-items: center;
+  }
+  .jumbotron-custom img {
+    margin-right: 1rem; /* Adjust margin as needed */
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 3rem; /* Adjust font size as needed */
+    margin-top: 1rem; /* Adjust margin as needed */
+  }
+</style>
+  </head>
+  <body style="background-color: #ffffff">
+    <div class="container-fluid full-viewport">
+      <div class="jumbotron jumbotron-custom">
+        <div class="d-flex align-items-center">
+          <div class="flex-shrink-0">
+            <img src="../static/geant-logo.jpg" class="img-fluid" style="width: 300px;" >
+          </div>
+          <div class="flex-grow-1 text-right">
+            <h1 class="mb-0 ">{% block title %}{{ text.title }}{% endblock %}</h1>
+          </div>
+        </div>
+      </div>
+    {% block content %}
+    {% endblock %}
+    </div>
+
+    <!-- Modal Start here-->
+    <div class="modal fade bs-example-modal-lg" id="shutdownmodal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <span>
+                    </span>Closing lab environments....
+                 </h4>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-info progress-bar-striped active"  style="width: 100%"></div>
+               </div>
+            </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal ends Here -->
+
+    <!-- Modal Start here-->
+    <div class="modal fade bs-example-modal-lg" id="setupmodal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <span>
+                    </span>Establishing lab environment....
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-info progress-bar-striped active" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

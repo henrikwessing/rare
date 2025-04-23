@@ -1,0 +1,20 @@
+{"nodes" : [
+    {"name" : "client1", "image" : "34334:base"},
+    {"name" : "client2", "image" : "34334:base"},
+    {"name" : "server", "image" : "34334:victims"},
+    {"name" : "internet"  , "image" : "34334:inet"}
+     ],
+     
+     
+     
+ "bridges" : [
+    {"name" : "sw2", "adjacencies" : ["internet;1", "server;2"],
+     "network" : "192.168.1.0", "gateway":"internet", "showswitch":"yes"
+    },
+    {"name" : "sw1", "adjacencies" : ["client1;3", "client2;4"],
+     "network" : "192.168.1.0", "showswitch":"yes"
+    },
+    {"name" : "sw3", "adjacencies" : ["sw1", "sw2"]
+    }
+ ]
+}
