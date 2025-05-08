@@ -99,7 +99,7 @@ def docker_build(image_path):
 
 def docker_clean():
     
-    """clean up our mess, this will remove all 34334 related containers
+    """clean up our mess, this will remove all rare related containers
     and will try to cleanup all of the network related stuff"""
     print("Cleaning docker and network namespaces")
     if os.system('systemctl is-active docker --quiet')==0:
@@ -138,8 +138,8 @@ def docker_clean():
                     except:
                         pass
 
-        r('service NetworkManager start')
-        r('service networking restart')
+        #r('service NetworkManager start')
+        #r('service networking restart')
   #  r('service docker status')
   #  try: 
   #      r('systemctl restart docker')
