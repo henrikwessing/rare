@@ -8,6 +8,8 @@ RUN echo "deb http://download.opensuse.org/repositories/home:/p4lang/Debian_${VE
 RUN curl -fsSL "https://download.opensuse.org/repositories/home:p4lang/Debian_${VERSION}/Release.key" | gpg --dearmor | tee /etc/apt/trusted.gpg.d/home_p4lang.gpg > /dev/null
 RUN apt-get update
 RUN apt-get -y install p4lang-bmv2 p4lang-p4c
+RUN apt-get install python3-pip -y
+RUN pip install grpcio protobuf p4runtime
 RUN mkdir /p4
 WORKDIR /p4
 #COPY *.p4 script_translate.sh script_install.sh ./
