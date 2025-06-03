@@ -1,56 +1,95 @@
 import grpc
-import p4runtime_lib.helper
-import p4runtime_lib.bmv2
+import threading
+import queue
+from p4.v1 import p4runtime_pb2
+from p4.v1 import p4runtime_pb2_grpc
+from p4helper import P4InfoHelper  # Make sure this helper exists and works
 
-# Load P4Info file
-p4info_helper = p4runtime_lib.helper.P4InfoHelper('path/to/p4info.txt')
+# Paths to compiled P4 artifacts
+P4INFO_PATH = "p4.info.txt"
+DEVICE_CONFIG_PATH = "l2-forwarding.json"
 
-# Define the address and port of the switch
-address = 'localhost:50051'
+# gRPC target and settings
+GRPC_ADDR = "localhost:50051"
+DEVICE_ID = 0
+ELECTION_ID = p4runtime_pb2.Uint128(high=0, low=1)
 
-# Create a channel and a stub
-channel = grpc.insecure_channel(address)
-stub = p4runtime_lib.bmv2.Bmv2Stub(channel)
+# Queue for messages sent via stream
+msg_queue = queue.Queue()
 
-# Define the device ID
-device_id = 0
+def request_generator():
+    while True:
+        msg = msg_queue.get()
+        if msg is None:
+            break
+        yield msg
 
-# Define the table entry to add
-table_entry = p4info_helper.buildTableEntry(
-table_name="MyIngress.my_table",
-match_fields={"hdr.ethernet.dstAddr": "00:00:00:00:00:01"},
-action_name="MyIngress.my_action",
-action_params={"port": 1}
+# Load P4Info
+p4info_helper = P4InfoHelper(P4INFO_PATH)
+
+# Connect to the switch via gRPC
+channel = grpc.insecure_channel(GRPC_ADDR)
+stub = p4runtime_pb2_grpc.P4RuntimeStub(channel)
+
+# Start the bi-directional stream
+stream = stub.StreamChannel(request_generator())
+
+# Start arbitration
+arb_req = p4runtime_pb2.StreamMessageRequest()
+arb_req.arbitration.device_id = DEVICE_ID
+arb_req.arbitration.election_id.CopyFrom(ELECTION_ID)
+msg_queue.put(arb_req)
+
+# Handle arbitration response in a background thread
+def handle_responses():
+    for response in stream:
+        if response.HasField("arbitration"):
+            if response.arbitration.status.code == 0:
+                print("✅ Became master controller")
+            else:
+                print("⚠️ Not master: code =", response.arbitration.status.code)
+
+threading.Thread(target=handle_responses, daemon=True).start()
+
+# Set the forwarding pipeline
+with open(DEVICE_CONFIG_PATH, "rb") as f:
+    device_config = f.read()
+
+stub.SetForwardingPipelineConfig(
+    p4runtime_pb2.SetForwardingPipelineConfigRequest(
+        device_id=DEVICE_ID,
+        role_id=0,
+        election_id=ELECTION_ID,
+        action=p4runtime_pb2.SetForwardingPipelineConfigRequest.VERIFY_AND_COMMIT,
+        config=p4runtime_pb2.ForwardingPipelineConfig(
+            p4info=p4info_helper.p4info,
+            p4_device_config=device_config
+        )
+    )
 )
 
-# Write the table entry to the switch
-request = p4runtime_lib.helper.buildWriteRequest(
-device_id=device_id,
-updates=[p4runtime_lib.helper.buildUpdate(
-entity=p4runtime_lib.helper.buildEntity(table_entry),
-type=p4runtime_lib.helper.UpdateType.INSERT
-)]
-)
-response = stub.Write(request)
+print("✅ Forwarding pipeline set successfully")
 
-# Print the response
-print(response)
+# Insert example MAC forwarding rule
+def insert_mac_entry(mac, port):
+    entry = p4info_helper.buildTableEntry(
+        table_name="MyIngress.mac",
+        match_fields={"hdr.ethernet.dstAddr": mac},
+        action_name="MyIngress.forward",
+        action_params={"outgoing_port": port}
+    )
+    try:
+        stub.Write(p4runtime_pb2.WriteRequest(
+            device_id=DEVICE_ID,
+            updates=[p4runtime_pb2.Update(
+                type=p4runtime_pb2.Update.INSERT,
+                entity=p4runtime_pb2.Entity(table_entry=entry)
+            )]
+        ))
+        print(f"✅ Inserted rule: {mac} → port {port}")
+    except grpc.RpcError as e:
+        print(f"❌ gRPC Error: {e.code()} - {e.details()}")
 
-# Define the table entry to remove
-table_entry = p4info_helper.buildTableEntry(
-table_name="MyIngress.my_table",
-match_fields={"hdr.ethernet.dstAddr": "00:00:00:00:00:01"}
-)
-
-# Write the table entry to the switch
-request = p4runtime_lib.helper.buildWriteRequest(
-device_id=device_id,
-updates=[p4runtime_lib.helper.buildUpdate(
-entity=p4runtime_lib.helper.buildEntity(table_entry),
-type=p4runtime_lib.helper.UpdateType.DELETE
-)]
-)
-response = stub.Write(request)
-
-# Print the response
-print(response)
+# Example MAC forwarding rules
+insert_mac_entry("00:00:00:00:01:01", 1)
+insert_mac_entry("00:00:00:00:02:02", 2)

@@ -2,11 +2,10 @@
     {"name" : "BMv2", "image" : "rare:bmv2"},
     {"name" : "host1", "image" : "rare:base"},
     {"name" : "host2"  , "image" : "rare:base"},
-    {"name" : "host3"  , "image" : "rare:base"},
-    {"name" : "internet" , "image" : "rare:base"}
+    {"name" : "host3"  , "image" : "rare:base"}
      ],
  "bridges" : [
-    {"name" : "BMv2", "adjacencies" : ["host1;1", "host2;2", "host3;3", "internet"], "network" : "10.0.1.0", "showswitch":"yes", "gateway" : "internet" }
+    {"name" : "BMv2", "adjacencies" : ["host1;1", "host2;2", "host3;3"], "network" : "10.0.1.0", "showswitch":"yes"}
 
  ],
  "files" : [ { "name" : "BMv2" , "src" : "02/." , "dst" : "/p4/" } ]

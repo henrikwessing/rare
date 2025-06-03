@@ -195,7 +195,7 @@ def setup_bmv2(setup, host_if=None):
           r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 l2-reflector.p4')
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
         if setup == "l2-forwarding":
-          r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 l2-forwarding.p4')
+          r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 --p4runtime-files p4.info.txt l2-forwarding.p4')
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
-          set_internet('internet',host_if, 'BMv2','10.0.1.100/24','10.0.1.4')
+          #set_internet('internet',host_if, 'BMv2','10.0.1.100/24','10.0.1.4')
 

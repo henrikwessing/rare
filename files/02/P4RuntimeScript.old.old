@@ -1,0 +1,134 @@
+import grpc
+from google.protobuf import text_format
+from p4.v1 import p4runtime_pb2, p4runtime_pb2_grpc
+from p4.config.v1 import p4info_pb2
+
+# Load and parse the P4Info file
+def load_p4info(path):
+    p4info = p4runtime_pb2.P4Info()
+    with open(path, 'r') as f:
+        text_format.Merge(f.read(), p4info)
+    return p4info
+
+# Find ID by name
+def get_id(p4info, name, items):
+    for item in items:
+        if item.preamble.name == name:
+            return item.preamble.id
+    raise Exception(f"{name} not found")
+
+# Connect to the switch
+def connect():
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = p4runtime_pb2_grpc.P4RuntimeStub(channel)
+    return stub
+
+# Perform master arbitration
+def master_arbitration(stub):
+    request = p4runtime_pb2.StreamMessageRequest()
+    request.arbitration.device_id = 0
+    request.arbitration.election_id.low = 1
+    stream = stub.StreamChannel(iter([request]))
+    next(stream)
+
+# Insert a unicast forwarding rule
+def insert_unicast(stub, p4info, dst_mac, port):
+    table_id = get_id(p4info, "mac", p4info.tables)
+    action_id = get_id(p4info, "forward", p4info.actions)
+    field_id = p4info.tables[0].match_fields[0].id
+    param_id = p4info.actions[0].params[0].id
+
+    entry = p4runtime_pb2.TableEntry(
+        table_id=table_id,
+        match=[p4runtime_pb2.FieldMatch(
+            field_id=field_id,
+            exact=p4runtime_pb2.FieldMatch.Exact(
+                value=bytes.fromhex(dst_mac.replace(":", ""))
+            )
+        )],
+        action=p4runtime_pb2.TableAction(
+            action=p4runtime_pb2.Action(
+                action_id=action_id,
+                params=[p4runtime_pb2.Action.Param(
+                    param_id=param_id,
+                    value=port.to_bytes(2, byteorder='big')
+                )]
+            )
+        )
+    )
+
+    stub.Write(p4runtime_pb2.WriteRequest(
+        device_id=0,
+        updates=[p4runtime_pb2.Update(
+            type=p4runtime_pb2.Update.INSERT,
+            entity=p4runtime_pb2.Entity(table_entry=entry)
+        )]
+    ))
+    print(f"✅ Unicast rule: {dst_mac} → port {port}")
+
+# Insert a broadcast rule
+def insert_broadcast(stub, p4info, mcast_grp):
+    table_id = get_id(p4info, "mac", p4info.tables)
+    action_id = get_id(p4info, "broadcast", p4info.actions)
+    field_id = p4info.tables[0].match_fields[0].id
+    param_id = p4info.actions[1].params[0].id
+
+    entry = p4runtime_pb2.TableEntry(
+        table_id=table_id,
+        match=[p4runtime_pb2.FieldMatch(
+            field_id=field_id,
+            exact=p4runtime_pb2.FieldMatch.Exact(
+                value=bytes.fromhex("FFFFFFFFFFFF")
+            )
+        )],
+        action=p4runtime_pb2.TableAction(
+            action=p4runtime_pb2.Action(
+                action_id=action_id,
+                params=[p4runtime_pb2.Action.Param(
+                    param_id=param_id,
+                    value=mcast_grp.to_bytes(2, byteorder='big')
+                )]
+            )
+        )
+    )
+
+    stub.Write(p4runtime_pb2.WriteRequest(
+        device_id=0,
+        updates=[p4runtime_pb2.Update(
+            type=p4runtime_pb2.Update.INSERT,
+            entity=p4runtime_pb2.Entity(table_entry=entry)
+        )]
+    ))
+    print(f"📣 Broadcast rule for FF:FF:FF:FF:FF:FF → mcast group {mcast_grp}")
+
+# Create multicast group
+def create_multicast_group(stub, mcast_grp, ports):
+    replicas = [p4runtime_pb2.Replica(egress_port=p, instance=0) for p in ports]
+    entry = p4runtime_pb2.PacketReplicationEngineEntry(
+        multicast_group_entry=p4runtime_pb2.MulticastGroupEntry(
+            multicast_group_id=mcast_grp,
+            replicas=replicas
+        )
+    )
+    stub.Write(p4runtime_pb2.WriteRequest(
+        device_id=0,
+        updates=[p4runtime_pb2.Update(
+            type=p4runtime_pb2.Update.INSERT,
+            entity=p4runtime_pb2.Entity(
+                packet_replication_engine_entry=entry
+            )
+        )]
+    ))
+    print(f"🔁 Multicast group {mcast_grp} → ports {ports}")
+
+# Main
+if __name__ == "__main__":
+    p4info = load_p4info("build/myswitch.p4.p4info.txt")
+    stub = connect()
+    master_arbitration(stub)
+
+    insert_unicast(stub, p4info, "00:00:00:00:01:01", 1)
+    insert_unicast(stub, p4info, "00:00:00:00:02:02", 2)
+
+    create_multicast_group(stub, mcast_grp=1, ports=[1, 2, 3, 4])
+    insert_broadcast(stub, p4info, mcast_grp=1)
