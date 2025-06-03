@@ -199,7 +199,7 @@ def setup_p4_2():
     if len(NSROOT.ns) >= 1:
         return 'Update Lab'
     try:
-        lab.setup_bmv2("l2-forwarding")
+        lab.setup_bmv2("l2-forwarding",host_if='eth0')
         time.sleep(3)
         return 'Update Lab'
 

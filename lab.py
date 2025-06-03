@@ -43,14 +43,14 @@ def create_bridges(bridges, nodes=[],p4=False):
             r('ip netns exec $rname ip link set $bname up')
         else:
             # Create switch
-  #          print("Setting up bridge for 3 or more nodes")
+            print("Setting up bridge for 3 or more nodes")
             # Check if bridge already defined:
             exists = False
             for node in nodes:
               if node['name']==bname:
                 exists=True
             if not exists:
-              ns_root.register_ns(bname, '34334:switch','switch')
+              ns_root.register_ns(bname, 'rare:switch','switch')
             if not p4:
               c(bname).enter_ns()
               r('brctl addbr $bname')
@@ -122,16 +122,16 @@ def set_internet(inetnode, interface, bridge, ip, gw):
     nic = c(bridge).connect(ns_root)
     
     #ensure network manager doesn't mess with anything
-    r('ip netns exec $bridge brctl addif $bridge $nic')
-    r('ip netns exec $bridge ip link set $nic up')
+    #r('ip netns exec $bridge brctl addif $bridge $nic')
+    #r('ip netns exec $bridge ip link set $nic up')
     ns_root.enter_ns()
 
-    r('service NetworkManager stop')
+    #r('service NetworkManager stop')
     # Connecting root to lab
     print("Connecting localhost to lab")
-    r('ip link set $bridge name 34334_lab')
-    r('ip link set 34334_lab up')
-    r('ip addr add $ip dev 34334_lab')
+    r('ip link set $bridge name rare_lab')
+    r('ip link set rare_lab up')
+    r('ip addr add $ip dev rare_lab')
     # Moving external interface to defined lab node
     r('ip link set $interface netns $inetnode')
     r('ip route add default via $gw')
@@ -168,7 +168,7 @@ def copy_files(files):
   
             
                 
-def setup_bmv2(setup):
+def setup_bmv2(setup, host_if=None):
     try:
         ns_root.shutdown()
     except:
@@ -197,6 +197,5 @@ def setup_bmv2(setup):
         if setup == "l2-forwarding":
           r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 l2-forwarding.p4')
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
-        
-  
+          set_internet('internet',host_if, 'BMv2','10.0.1.100/24','10.0.1.4')
 
