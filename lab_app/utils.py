@@ -90,10 +90,9 @@ def docker_build(image_path):
 	# first we need to build the base image so we can build the rest
 	sys('systemctl restart docker')
 	r('docker build -t rare:base base --progress=plain')
-	#for image in ('bmv2'):
-	image = 'bmv2'
-	image_name = 'rare:' + image
-	r('docker build -t $image_name $image --progress=plain')
+	for image in ['bmv2','router']:
+	  image_name = 'rare:' + image
+	  r('docker build -t $image_name $image --progress=plain')
 	#go back to the working dir
 	os.chdir(orig_dir)
 

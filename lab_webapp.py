@@ -207,6 +207,19 @@ def setup_p4_2():
         print(traceback.format_exc())
         return 'Error'
 
+@app.route('/setup_p4_4')
+def setup_p4_3():
+    if len(NSROOT.ns) >= 1:
+        return 'Update Lab'
+    try:
+        lab.setup_bmv2("03-RARE",host_if='eth0')
+        time.sleep(3)
+        return 'Update Lab'
+
+    except:
+        print(traceback.format_exc())
+        return 'Error'
+
 @app.route('/shutdown')
 def shutdownlab():
 	"""cleans up mess"""

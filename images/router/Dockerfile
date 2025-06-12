@@ -1,5 +1,5 @@
 ARG VERSION="11"
-FROM debian:${VERSION}.11
+FROM debian:${VERSION}
 ARG VERSION
 RUN apt-get update && apt-get  -y upgrade
 RUN apt-get install -y curl gpg make nano procps
