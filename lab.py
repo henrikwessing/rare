@@ -11,6 +11,7 @@ def read_setup(setup):
     print(f)
     try:
         data = json.load(f)
+        print("Reading lab configuration")
         print(data)
         return (data.get("nodes", None),data.get("bridges",None),data.get("files",None))
     except:
@@ -190,7 +191,10 @@ def setup_bmv2(setup, host_if=None):
         print("Applying IP addressing scheme")
         set_addresses(bridges)
         print("Copying files and folders")
-        copy_files(files)
+        try:
+          copy_files(files)
+        except: 
+          print("Error copying files. Check availability and configuration file")
         if setup == "l2-reflector":
           r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 l2-reflector.p4')
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
@@ -198,4 +202,6 @@ def setup_bmv2(setup, host_if=None):
           r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 --p4runtime-files p4.info.txt l2-forwarding.p4')
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
           #set_internet('internet',host_if, 'BMv2','10.0.1.100/24','10.0.1.4')
+        if setup == "03-RARE":
+          print(f"Commands specifically for {setup}")
 
