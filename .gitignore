@@ -13,9 +13,6 @@ __pycache__/
 
 # P4 / Network Sim Tools
 *.pcap
-*.json
-*.cfg
-*.txt
 *.dot
 *.out
 

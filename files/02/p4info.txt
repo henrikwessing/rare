@@ -1,0 +1,59 @@
+pkg_info {
+  arch: "v1model"
+}
+tables {
+  preamble {
+    id: 47914218
+    name: "MyIngress.mac"
+    alias: "mac"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ethernet.dstAddr"
+    bitwidth: 48
+    match_type: EXACT
+  }
+  action_refs {
+    id: 29683729
+  }
+  action_refs {
+    id: 25652968
+  }
+  action_refs {
+    id: 22516369
+  }
+  size: 16
+}
+actions {
+  preamble {
+    id: 25652968
+    name: "MyIngress.drop"
+    alias: "drop"
+  }
+}
+actions {
+  preamble {
+    id: 29683729
+    name: "MyIngress.forward"
+    alias: "forward"
+  }
+  params {
+    id: 1
+    name: "outgoing_port"
+    bitwidth: 9
+  }
+}
+actions {
+  preamble {
+    id: 22516369
+    name: "MyIngress.broadcast"
+    alias: "broadcast"
+  }
+  params {
+    id: 1
+    name: "mgrp"
+    bitwidth: 16
+  }
+}
+type_info {
+}

@@ -1,0 +1,24 @@
+set forwarder p4
+!hw id emu
+!int r12 eth 0000.1111.0001 127.0.0.1 26011 127.0.0.1 26021
+! P4Runtime API endpoint (BMv2 gRPC address)
+set p4runtime api 127.0.0.1 50051
+
+! Device ID of the BMv2 target (default 0)
+set p4runtime device-id 0
+
+! Set P4Runtime pipeline configuration (JSON file compiled from RARE P4)
+set p4runtime config /p4/router.json
+
+! Interface mappings: map FreeRtr interfaces to P4 ports
+int eth1 eth 0000.1111.0001 127.0.0.1 1001 127.0.0.1 2001
+set interface eth2 p4port 2
+set interface eth3 p4port 3
+set interface eth4 p4port 4
+
+! Optional: configure loopback for management
+set interface loop0 ip address 192.168.0.1 255.255.255.255
+
+! Enable logging
+!set logging file logs/rare1.log
+!set logging monitor debug
