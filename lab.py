@@ -89,36 +89,38 @@ def recode_addresses(bridge):
     gw = bridge.get("gateway")
     gwip=''
     for node in bridge["adjacencies"]:
-        name = node.split(";")[0]
-        try:
-            hostid = int(node.split(";")[1])
-        except:
-            pass
-        addr = {"name" : name, "ip" : ip_address(iprange,hostid) }
-        if name == gw:
-            gwip = addr["ip"]
-        addresstable.append(addr)
-        hostid = hostid+1
+      name = node.split(";")[0]
+      try: 
+        hostid = int(node.split(";")[1])
+      except:
+        pass
+      addr = {"name" : name, "ip" : ip_address(iprange,hostid) }
+      if name == gw:
+        gwip = addr["ip"]
+      addresstable.append(addr)
+      hostid = hostid+1  
     return (gw, gwip, addresstable)
             
-def set_addresses(bridges):
+def set_addresses(bridges, nodes):
     # Setting addresses based on json. We assume /24 prefixes and use first available value for gateway unless specified
     print("Setting IP addresses")
     for bridge in bridges:
-        print(type(bridge))
         if "network" in bridge:
             bridgename = bridge["name"]
             (gw, gwip, adrtable) = recode_addresses(bridge)
             for node in adrtable:
-                if node["net"]:
-                  name = node["name"]
-                  ip = node["ip"]
-                  ip_prefix = ip + "/24"
-                  r('ip netns exec $name ip addr add $ip_prefix dev $bridgename')
-                  if (ip != gwip) and gw:
+              ## Chck for net enabled
+              name = node["name"]
+              enabled = next((n.get("net_enabled") for n in nodes if n.get("name") == name), True)
+              enabled= True if enabled is None else enabled
+              if enabled:
+                ip = node["ip"]
+                ip_prefix = ip + "/24"
+                r('ip netns exec $name ip addr add $ip_prefix dev $bridgename')
+                if (ip != gwip) and gw:
                       r('ip netns exec $name ip route add default via $gwip')
-                else:
-                  print("No network provided for device")
+        else:
+          print("No network provided for device")
 
 
 def set_internet(inetnode, interface, bridge, ip, gw):
@@ -204,7 +206,7 @@ def setup_bmv2(setup, host_if=None):
         create_bridges(bridges, nodes=nodes,p4=True)
         #if setup != "03-RARE":
         print("Applying IP addressing scheme")
-        set_addresses(bridges)
+        set_addresses(bridges, nodes)
         print("Copying files and folders")
         copy_files(nodes, files)
         if setup == "l2-reflector":
