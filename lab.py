@@ -3,6 +3,7 @@ import errno
 import json
 from multiprocessing import Process
 import os
+from pathlib import Path
 
 from random import randrange
 
@@ -109,12 +110,15 @@ def set_addresses(bridges):
             bridgename = bridge["name"]
             (gw, gwip, adrtable) = recode_addresses(bridge)
             for node in adrtable:
-                name = node["name"]
-                ip = node["ip"]
-                ip_prefix = ip + "/24"
-                r('ip netns exec $name ip addr add $ip_prefix dev $bridgename')
-                if (ip != gwip) and gw:
-                    r('ip netns exec $name ip route add default via $gwip')
+                if node["net"]:
+                  name = node["name"]
+                  ip = node["ip"]
+                  ip_prefix = ip + "/24"
+                  r('ip netns exec $name ip addr add $ip_prefix dev $bridgename')
+                  if (ip != gwip) and gw:
+                      r('ip netns exec $name ip route add default via $gwip')
+                else:
+                  print("No network provided for device")
 
 
 def set_internet(inetnode, interface, bridge, ip, gw):
@@ -155,16 +159,26 @@ def set_internet(inetnode, interface, bridge, ip, gw):
     except:
         print("Hopefully not relevant")
 
-def copy_files(files):
+def copy_files(nodes, filepath):
   print("Copying files to containers")
-  print(files)
-  path = 'files/'
-  cur_folder = os.getcwd()
-  print(f"Current folder {cur_folder}")
-  for item in files:
-    copystring = f"docker cp {path}{item.get('src')} {item.get('name')}:{item.get('dst')}"
-    print(copystring)
-    r(copystring)
+  path = f"files/{filepath}/"
+  dstdir = "/p4/" # Just an ugly hardcoding for now
+  for n in nodes:
+    folder = Path(path+n["name"])
+    print(folder)
+    if folder.exists() and folder.is_dir():
+      for file in folder.iterdir():
+        if file.is_file():
+         print("Copying file:", file)
+         copystring = f"docker cp {file} {n['name']}:{dstdir}{file.name}"
+         print(copystring)
+         r(copystring)
+
+    else:
+     print("No folder for", folder) 
+
+    
+    #for item in os.listdir(cur_folder+path+files):
 
   
             
@@ -188,13 +202,11 @@ def setup_bmv2(setup, host_if=None):
         # Connecting all dockers in bridges
         print("Interconnect nodes")
         create_bridges(bridges, nodes=nodes,p4=True)
+        #if setup != "03-RARE":
         print("Applying IP addressing scheme")
         set_addresses(bridges)
         print("Copying files and folders")
-        try:
-          copy_files(files)
-        except: 
-          print("Error copying files. Check availability and configuration file")
+        copy_files(nodes, files)
         if setup == "l2-reflector":
           r('docker exec -ti BMv2 p4c --target bmv2 --arch v1model --std p4-16 l2-reflector.p4')
           r('docker exec -ti BMv2 sysctl net.ipv4.icmp_echo_ignore_all=1')
@@ -204,4 +216,6 @@ def setup_bmv2(setup, host_if=None):
           #set_internet('internet',host_if, 'BMv2','10.0.1.100/24','10.0.1.4')
         if setup == "03-RARE":
           print(f"Commands specifically for {setup}")
+          #r('docker exec -ti router1 sh cmd_ctrlchannel.sh &')
+
 

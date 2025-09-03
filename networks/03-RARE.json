@@ -1,6 +1,6 @@
 {"nodes" : [
-    {"name" : "router1", "image" : "rare:router"},
-    {"name" : "router2", "image" : "rare:router"},
+    {"name" : "router1", "image" : "rare:router", "net": False},
+    {"name" : "router2", "image" : "rare:router", "net" : False},
     {"name" : "router3"  , "image" : "rare:router"},
     {"name" : "router4"  , "image" : "rare:router"},
     {"name" : "host1"  , "image" : "rare:base"},
@@ -9,8 +9,7 @@
     {"name" : "host4"  , "image" : "rare:base"}
      ],
  "bridges" : [
-    {"name" : "r12", "adjacencies" : ["router1", "router2;2"],
-     "network" : "10.1.2.0"
+    {"name" : "r12", "adjacencies" : ["router1", "router2;2"]
     },
     {"name" : "r13", "adjacencies" : ["router1;1", "router3;3"],
      "network" : "10.1.3.0"

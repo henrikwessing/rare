@@ -31,8 +31,8 @@ RUN apt-get install -y supervisor
 RUN cd /p4
 RUN p4c --target bmv2 --arch v1model --std p4-16 router.p4 --p4runtime-files router.p4info.txt -o build
 RUN apt-get install -y telnet telnetd
-COPY router-hw.txt router-sw.txt /p4/
-COPY cmd_bmv2.sh cmd_freertr.sh cmd_forwarder.sh cmd_stichctrl.sh cmd_ctrlchannel.sh /p4/
+#COPY router-hw.txt router-sw.txt /p4/
+COPY cmd_freertr.sh cmd_forwarder.sh cmd_ctrlchannel.sh /p4/
 #create directory for child images to store configuration in
 RUN  mkdir -p /var/log/supervisor && mkdir -p /etc/supervisor/conf.d
 
