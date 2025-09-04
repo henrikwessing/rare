@@ -39,7 +39,6 @@ interface sdn1
  desc P4 interface to host 1 
  vrf forwarding v1
  mtu 1500
- !macaddr 0072.3e18.1b6f
  ipv4 addr 192.168.1.1 255.255.255.0
  no shutdown
  exit
@@ -48,16 +47,10 @@ interface sdn12
  desc P4 interface to router 2 
  vrf forwarding v1
  mtu 1500 
- !macaddr 0072.3e22.1b7f
  ipv4 addr 10.1.2.1 255.255.255.0
  router ospf4 1 enable
  router ospf4 1 area 0
  no shutdown
  exit
-!
-!ipv4 route v1 192.168.2.0 255.255.255.0 10.1.2.1
-!ipv4 route v1 192.168.1.0 255.255.255.0 192.168.1.1 
-!
-!client tcp-checksum transmit
 !
 end

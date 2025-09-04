@@ -107,17 +107,13 @@ def buildlab():
 	print("Ready to serve")
 	Process.terminate
 
-# use decorators to link the function to a url
 @app.route('/')
 def launcher():
-
     dockers = []
-
     for docker in NSROOT.ns:
         dockers.append(docker)
     text = { 	'title': 'P4 tutorial', 
     		'text' : 'Establish networks using buttons to the left' }
-
     return render_template('launcher.html', dockers=dockers, text=text)
 
 
@@ -207,7 +203,7 @@ def setup_p4_2():
         print(traceback.format_exc())
         return 'Error'
 
-@app.route('/setup_p4_4')
+@app.route('/setup_p4_3')
 def setup_p4_3():
     if len(NSROOT.ns) >= 1:
         return 'Update Lab'
